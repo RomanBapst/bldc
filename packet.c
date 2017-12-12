@@ -161,3 +161,85 @@ void packet_process_byte(uint8_t rx_data, int handler_num) {
 		break;
 	}
 }
+
+int packet_process_byte_ret(uint8_t rx_data, int handler_num) {
+	int ret = -1;
+	switch (handler_states[handler_num].rx_state) {
+	case 0:
+		if (rx_data == 2) {
+			// 1 byte PL len
+			handler_states[handler_num].rx_state += 2;
+			handler_states[handler_num].rx_timeout = PACKET_RX_TIMEOUT;
+			handler_states[handler_num].rx_data_ptr = 0;
+			handler_states[handler_num].payload_length = 0;
+		} else if (rx_data == 3) {
+			// 2 byte PL len
+			handler_states[handler_num].rx_state++;
+			handler_states[handler_num].rx_timeout = PACKET_RX_TIMEOUT;
+			handler_states[handler_num].rx_data_ptr = 0;
+			handler_states[handler_num].payload_length = 0;
+		} else {
+			handler_states[handler_num].rx_state = 0;
+		}
+		break;
+
+	case 1:
+		handler_states[handler_num].payload_length = (unsigned int)rx_data << 8;
+		handler_states[handler_num].rx_state++;
+		handler_states[handler_num].rx_timeout = PACKET_RX_TIMEOUT;
+		break;
+
+	case 2:
+		handler_states[handler_num].payload_length |= (unsigned int)rx_data;
+		if (handler_states[handler_num].payload_length > 0 &&
+				handler_states[handler_num].payload_length <= PACKET_MAX_PL_LEN) {
+			handler_states[handler_num].rx_state++;
+			handler_states[handler_num].rx_timeout = PACKET_RX_TIMEOUT;
+		} else {
+			handler_states[handler_num].rx_state = 0;
+		}
+		break;
+
+	case 3:
+		handler_states[handler_num].rx_buffer[handler_states[handler_num].rx_data_ptr++] = rx_data;
+		if (handler_states[handler_num].rx_data_ptr == handler_states[handler_num].payload_length) {
+			handler_states[handler_num].rx_state++;
+		}
+		handler_states[handler_num].rx_timeout = PACKET_RX_TIMEOUT;
+		break;
+
+	case 4:
+		handler_states[handler_num].crc_high = rx_data;
+		handler_states[handler_num].rx_state++;
+		handler_states[handler_num].rx_timeout = PACKET_RX_TIMEOUT;
+		break;
+
+	case 5:
+		handler_states[handler_num].crc_low = rx_data;
+		handler_states[handler_num].rx_state++;
+		handler_states[handler_num].rx_timeout = PACKET_RX_TIMEOUT;
+		break;
+
+	case 6:
+		if (rx_data == 4) {
+			if (crc16(handler_states[handler_num].rx_buffer, handler_states[handler_num].payload_length)
+					== ((unsigned short)handler_states[handler_num].crc_high << 8
+							| (unsigned short)handler_states[handler_num].crc_low)) {
+				// Packet received!
+				ret = 0;
+				if (handler_states[handler_num].process_func) {
+					handler_states[handler_num].process_func(handler_states[handler_num].rx_buffer,
+							handler_states[handler_num].payload_length);
+				}
+			}
+		}
+		handler_states[handler_num].rx_state = 0;
+		break;
+
+	default:
+		handler_states[handler_num].rx_state = 0;
+		break;
+	}
+
+	return ret;
+}

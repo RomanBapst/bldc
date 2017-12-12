@@ -77,6 +77,16 @@ void terminal_process_string(char *str) {
 
 	if (strcmp(argv[0], "ping") == 0) {
 		commands_printf("pong\n");
+	} else if (strcmp(argv[0], "mot_set") == 0) {
+		if (argc == 3) {
+			float rpm;
+			float motor_id;
+			sscanf(argv[1], "%f", &motor_id);
+			sscanf(argv[2], "%f", &rpm);
+			commands_printf("command for motor %.1f is %.4f\n", (double)motor_id, (double)rpm);
+			comm_can_set_rpm((uint8_t)motor_id, rpm);
+		}
+
 	} else if (strcmp(argv[0], "stop") == 0) {
 		mc_interface_set_duty(0);
 		commands_printf("Motor stopped\n");
