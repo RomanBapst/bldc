@@ -44,6 +44,8 @@
 #include <stdarg.h>
 #include <stdio.h>
 
+#define MAX_CAN_AGE						0.1
+
 // Threads
 static THD_FUNCTION(detect_thread, arg);
 static THD_WORKING_AREA(detect_thread_wa, 2048);
@@ -848,6 +850,50 @@ void commands_process_packet(unsigned char *data, unsigned int len) {
 		send_buffer[ind++] = packet_id;
 		send_buffer[ind++] = NRF_PAIR_STARTED;
 		commands_send_packet(send_buffer, ind);
+		break;
+
+	case COMM_SET_RPM_WITH_ID:
+		ind = 0;
+		uint8_t num_ids = data[ind];
+		ind++;
+		uint32_t rpm = 0;
+		uint8_t id = 0;
+
+		for (uint8_t i = 0; i < num_ids; i++) {
+			id = data[ind];
+			ind++;
+			rpm = 0;
+			rpm |= ((uint32_t)data[ind++]);
+			rpm |= ((uint32_t)data[ind++]) << 8;
+			rpm |= ((uint32_t)data[ind++]) << 16;
+			rpm |= ((uint32_t)data[ind++]) << 24;
+
+			comm_can_set_rpm(id, (float)rpm);
+		}
+
+		// ind = 0;
+		// // first item will be the number of motors
+		// uint8_t num_motors = 0;
+		// ind++;
+
+		// for (int i = 0;i < CAN_STATUS_MSGS_TO_STORE;i++) {
+		// 	can_status_msg *msg = comm_can_get_status_msg_index(i);
+
+		// 	if (msg->id >= 0 && UTILS_AGE_S(msg->rx_time) < MAX_CAN_AGE) {
+		// 		send_buffer[ind++] = msg->id;
+		// 		buffer_append_uint32(send_buffer, (uint32_t)msg->rpm, &ind);
+		// 		num_motors++;
+		// 	}
+		// }
+
+		// appconf = *app_get_configuration();
+		// send_buffer[ind++] = appconf.controller_id;
+		// buffer_append_uint32(send_buffer, (uint32_t)mc_interface_get_rpm(), &ind);
+
+		// send_buffer[0] = num_motors + 1;
+		// commands_send_packet(send_buffer, ind);
+
+
 		break;
 
 	default:

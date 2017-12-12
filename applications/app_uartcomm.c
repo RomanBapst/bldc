@@ -45,6 +45,7 @@ static volatile bool is_running = false;
 // Private functions
 static void process_packet(unsigned char *data, unsigned int len);
 static void send_packet_wrapper(unsigned char *data, unsigned int len);
+static void send_packet_wrapper_usb(unsigned char *data, unsigned int len);
 static void send_packet(unsigned char *data, unsigned int len);
 
 /*
@@ -111,12 +112,16 @@ static UARTConfig uart_cfg = {
 };
 
 static void process_packet(unsigned char *data, unsigned int len) {
-	commands_set_send_func(send_packet_wrapper);
+	commands_set_send_func(send_packet_wrapper_usb);
 	commands_process_packet(data, len);
 }
 
 static void send_packet_wrapper(unsigned char *data, unsigned int len) {
 	packet_send_packet(data, len, PACKET_HANDLER);
+}
+
+static void send_packet_wrapper_usb(unsigned char *data, unsigned int len) {
+	packet_send_packet(data, len, 0);
 }
 
 static void send_packet(unsigned char *data, unsigned int len) {
@@ -176,11 +181,13 @@ static THD_FUNCTION(packet_process_thread, arg) {
 
 	process_tp = chThdGetSelfX();
 
+
 	for(;;) {
 		chEvtWaitAny((eventmask_t) 1);
 
 		while (serial_rx_read_pos != serial_rx_write_pos) {
-			packet_process_byte(serial_rx_buffer[serial_rx_read_pos++], PACKET_HANDLER);
+
+			int ret = packet_process_byte_ret(serial_rx_buffer[serial_rx_read_pos++], PACKET_HANDLER);
 
 			if (serial_rx_read_pos == SERIAL_RX_BUFFER_SIZE) {
 				serial_rx_read_pos = 0;
