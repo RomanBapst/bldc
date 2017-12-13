@@ -186,7 +186,8 @@ INCDIR = $(STARTUPINC) $(KERNINC) $(PORTINC) $(OSALINC) \
          appconf \
          $(HWINC) \
          $(APPINC) \
-         $(NRFINC)
+         $(NRFINC) \
+         mavlink/include/mavlink/v2.0
 
 #
 # Project, sources and paths
