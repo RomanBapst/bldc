@@ -23,13 +23,19 @@
 #include "hw.h"
 #include "packet.h"
 #include "commands.h"
+#include "comm_can.h"
+#include "utils.h"
 
 #include <string.h>
+
+#include <mavlink_types.h>
+#include <common/mavlink.h>
 
 // Settings
 #define BAUDRATE					115200
 #define PACKET_HANDLER				1
 #define SERIAL_RX_BUFFER_SIZE		1024
+#define MAX_CAN_AGE					0.1
 
 // Threads
 static THD_FUNCTION(packet_process_thread, arg);
@@ -41,6 +47,9 @@ static uint8_t serial_rx_buffer[SERIAL_RX_BUFFER_SIZE];
 static int serial_rx_read_pos = 0;
 static int serial_rx_write_pos = 0;
 static volatile bool is_running = false;
+
+static const uint8_t mavlink_message_lengths[256] = MAVLINK_MESSAGE_LENGTHS;
+static const uint8_t mavlink_message_crcs[256] = MAVLINK_MESSAGE_CRCS;
 
 // Private functions
 static void process_packet(unsigned char *data, unsigned int len);
@@ -174,6 +183,67 @@ void app_uartcomm_configure(uint32_t baudrate) {
 	}
 }
 
+void handle_message(mavlink_message_t *msg) {
+	if (msg->msgid == MAVLINK_MSG_ID_SERVO_OUTPUT_RAW) {
+		mavlink_servo_output_raw_t actuator_outputs;
+		mavlink_msg_servo_output_raw_decode(msg, &actuator_outputs);
+
+		// set motor speeds
+		uint8_t id = 1;
+		comm_can_set_rpm(id, actuator_outputs.servo1_raw);
+		id++;
+		comm_can_set_rpm(id, actuator_outputs.servo2_raw);
+		id++;
+		comm_can_set_rpm(id, actuator_outputs.servo3_raw);
+		id++;
+		comm_can_set_rpm(id, actuator_outputs.servo4_raw);
+
+		mavlink_esc_status_t esc_status = {};
+
+		for (int i = 0; i < CAN_STATUS_MSGS_TO_STORE; i++) {
+			can_status_msg *msg = comm_can_get_status_msg_index(i);
+
+			if (msg->id >= 0 && UTILS_AGE_S(msg->rx_time) < MAX_CAN_AGE) {
+				esc_status.rpm[i] = msg->rpm;
+			}
+		}
+
+		uint8_t buf[MAVLINK_MAX_PACKET_LEN];
+		const uint8_t msgid = MAVLINK_MSG_ID_ESC_STATUS;
+		uint8_t component_ID = 0;
+		uint8_t payload_len = mavlink_message_lengths[msgid];
+		unsigned packet_len = payload_len + MAVLINK_NUM_NON_PAYLOAD_BYTES;
+
+		/* header */
+		buf[0] = MAVLINK_STX;
+		buf[1] = payload_len;
+		/* no idea which numbers should be here*/
+		buf[2] = 100;
+		buf[3] = 0;
+		buf[4] = component_ID;
+		buf[5] = msgid;
+
+		/* payload */
+		memcpy(&buf[MAVLINK_NUM_HEADER_BYTES], (const void *)&esc_status, payload_len);
+
+		/* checksum */
+		uint16_t checksum;
+		crc_init(&checksum);
+		crc_accumulate_buffer(&checksum, (const char *) &buf[1], MAVLINK_CORE_HEADER_LEN + payload_len);
+		crc_accumulate(mavlink_message_crcs[msgid], &checksum);
+
+		buf[MAVLINK_NUM_HEADER_BYTES + payload_len] = (uint8_t)(checksum & 0xFF);
+		buf[MAVLINK_NUM_HEADER_BYTES + payload_len + 1] = (uint8_t)(checksum >> 8);
+
+		// Wait for the previous transmission to finish.
+		while (HW_UART_DEV.txstate == UART_TX_ACTIVE) {
+			chThdSleep(1);
+		}
+
+		uartStartSend(&HW_UART_DEV, packet_len, buf);
+	}
+}
+
 static THD_FUNCTION(packet_process_thread, arg) {
 	(void)arg;
 
@@ -181,13 +251,19 @@ static THD_FUNCTION(packet_process_thread, arg) {
 
 	process_tp = chThdGetSelfX();
 
+	mavlink_status_t serial_status = {};
 
 	for(;;) {
 		chEvtWaitAny((eventmask_t) 1);
 
 		while (serial_rx_read_pos != serial_rx_write_pos) {
 
-			int ret = packet_process_byte_ret(serial_rx_buffer[serial_rx_read_pos++], PACKET_HANDLER);
+			mavlink_message_t msg;
+
+			if (mavlink_parse_char(MAVLINK_COMM_0, serial_rx_buffer[serial_rx_read_pos++], &msg, &serial_status)) {
+				// have a message, handle it
+				handle_message(&msg);
+			}
 
 			if (serial_rx_read_pos == SERIAL_RX_BUFFER_SIZE) {
 				serial_rx_read_pos = 0;

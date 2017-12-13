@@ -21,6 +21,7 @@
 #define APP_H_
 
 #include "conf_general.h"
+#include <common/mavlink.h>
 
 // Functions
 const app_configuration* app_get_configuration(void);
@@ -43,6 +44,7 @@ float app_adc_get_voltage2(void);
 void app_uartcomm_start(void);
 void app_uartcomm_stop(void);
 void app_uartcomm_configure(uint32_t baudrate);
+void handle_message(mavlink_message_t *msg);
 
 void app_nunchuk_start(void);
 void app_nunchuk_stop(void);
