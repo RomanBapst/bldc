@@ -351,7 +351,7 @@ void comm_can_transmit_eid(uint32_t id, uint8_t *data, uint8_t len) {
 	memcpy(txmsg.data8, data, len);
 
 	chMtxLock(&can_mtx);
-	canTransmit(&CANDx, CAN_ANY_MAILBOX, &txmsg, MS2ST(20));
+	canTransmit(&CANDx, CAN_ANY_MAILBOX, &txmsg, TIME_IMMEDIATE);
 	chMtxUnlock(&can_mtx);
 
 #else
