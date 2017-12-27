@@ -34,18 +34,19 @@
 // Settings
 #define BAUDRATE					115200
 #define PACKET_HANDLER				1
-#define SERIAL_RX_BUFFER_SIZE		1024
+#define SERIAL_RX_BUFFER_SIZE		10
 #define MAX_CAN_AGE					0.1
 
 // Threads
 static THD_FUNCTION(packet_process_thread, arg);
-static THD_WORKING_AREA(packet_process_thread_wa, 4096);
+static THD_WORKING_AREA(packet_process_thread_wa, 8096);
 static thread_t *process_tp = 0;
 
 // Variables
 static uint8_t serial_rx_buffer[SERIAL_RX_BUFFER_SIZE];
 static int serial_rx_read_pos = 0;
 static int serial_rx_write_pos = 0;
+static int serial_last_write_pos = 0;
 static volatile bool is_running = false;
 
 static const uint8_t mavlink_message_lengths[256] = MAVLINK_MESSAGE_LENGTHS;
@@ -87,22 +88,33 @@ static void rxerr(UARTDriver *uartp, uartflags_t e) {
  */
 static void rxchar(UARTDriver *uartp, uint16_t c) {
 	(void)uartp;
-	serial_rx_buffer[serial_rx_write_pos++] = c;
+	// serial_rx_buffer[serial_rx_write_pos++] = c;
 
-	if (serial_rx_write_pos == SERIAL_RX_BUFFER_SIZE) {
-		serial_rx_write_pos = 0;
-	}
+	// if (serial_rx_write_pos == SERIAL_RX_BUFFER_SIZE) {
+	// 	serial_rx_write_pos = 0;
+	// }
 
-	chSysLockFromISR();
-	chEvtSignalI(process_tp, (eventmask_t) 1);
-	chSysUnlockFromISR();
+	// chSysLockFromISR();
+	// chEvtSignalI(process_tp, (eventmask_t) 1);
+	// chSysUnlockFromISR();
 }
 
 /*
  * This callback is invoked when a receive buffer has been completely written.
  */
 static void rxend(UARTDriver *uartp) {
-	(void)uartp;
+	serial_last_write_pos = serial_rx_write_pos;
+	serial_rx_write_pos += SERIAL_RX_BUFFER_SIZE / 2;
+
+	if (serial_rx_write_pos >= SERIAL_RX_BUFFER_SIZE)
+		serial_rx_write_pos = 0;
+
+	chSysLockFromISR();
+	chEvtSignalI(process_tp, (eventmask_t) 1);
+	chSysUnlockFromISR();
+
+	uartStartReceive(&HW_UART_DEV, SERIAL_RX_BUFFER_SIZE / 2, &serial_rx_buffer[serial_rx_write_pos]);
+
 }
 
 /*
@@ -253,20 +265,16 @@ static THD_FUNCTION(packet_process_thread, arg) {
 
 	mavlink_status_t serial_status = {};
 
+	uartStartReceive(&HW_UART_DEV, SERIAL_RX_BUFFER_SIZE / 2, &serial_rx_buffer[serial_rx_write_pos]);
+	mavlink_message_t msg;
 	for(;;) {
 		chEvtWaitAny((eventmask_t) 1);
 
-		while (serial_rx_read_pos != serial_rx_write_pos) {
+		for (int i = 0; i < SERIAL_RX_BUFFER_SIZE / 2; i++) {
 
-			mavlink_message_t msg;
-
-			if (mavlink_parse_char(MAVLINK_COMM_0, serial_rx_buffer[serial_rx_read_pos++], &msg, &serial_status)) {
+			if (mavlink_parse_char(MAVLINK_COMM_0, serial_rx_buffer[serial_last_write_pos+i], &msg, &serial_status)) {
 				// have a message, handle it
 				handle_message(&msg);
-			}
-
-			if (serial_rx_read_pos == SERIAL_RX_BUFFER_SIZE) {
-				serial_rx_read_pos = 0;
 			}
 		}
 	}
