@@ -49,9 +49,6 @@ static int serial_rx_write_pos = 0;
 static int serial_last_write_pos = 0;
 static volatile bool is_running = false;
 
-static const uint8_t mavlink_message_lengths[256] = MAVLINK_MESSAGE_LENGTHS;
-static const uint8_t mavlink_message_crcs[256] = MAVLINK_MESSAGE_CRCS;
-
 // Private functions
 static void process_packet(unsigned char *data, unsigned int len);
 static void send_packet_wrapper(unsigned char *data, unsigned int len);
@@ -88,15 +85,6 @@ static void rxerr(UARTDriver *uartp, uartflags_t e) {
  */
 static void rxchar(UARTDriver *uartp, uint16_t c) {
 	(void)uartp;
-	// serial_rx_buffer[serial_rx_write_pos++] = c;
-
-	// if (serial_rx_write_pos == SERIAL_RX_BUFFER_SIZE) {
-	// 	serial_rx_write_pos = 0;
-	// }
-
-	// chSysLockFromISR();
-	// chEvtSignalI(process_tp, (eventmask_t) 1);
-	// chSysUnlockFromISR();
 }
 
 /*
@@ -220,39 +208,19 @@ void handle_message(mavlink_message_t *msg) {
 			}
 		}
 
-		uint8_t buf[MAVLINK_MAX_PACKET_LEN];
-		const uint8_t msgid = MAVLINK_MSG_ID_ESC_STATUS;
-		uint8_t component_ID = 0;
-		uint8_t payload_len = mavlink_message_lengths[msgid];
-		unsigned packet_len = payload_len + MAVLINK_NUM_NON_PAYLOAD_BYTES;
+		mavlink_message_t out_msg = {};
 
-		/* header */
-		buf[0] = MAVLINK_STX;
-		buf[1] = payload_len;
-		/* no idea which numbers should be here*/
-		buf[2] = 100;
-		buf[3] = 0;
-		buf[4] = component_ID;
-		buf[5] = msgid;
-
-		/* payload */
-		memcpy(&buf[MAVLINK_NUM_HEADER_BYTES], (const void *)&esc_status, payload_len);
-
-		/* checksum */
-		uint16_t checksum;
-		crc_init(&checksum);
-		crc_accumulate_buffer(&checksum, (const char *) &buf[1], MAVLINK_CORE_HEADER_LEN + payload_len);
-		crc_accumulate(mavlink_message_crcs[msgid], &checksum);
-
-		buf[MAVLINK_NUM_HEADER_BYTES + payload_len] = (uint8_t)(checksum & 0xFF);
-		buf[MAVLINK_NUM_HEADER_BYTES + payload_len + 1] = (uint8_t)(checksum >> 8);
+		// system ID, component ID
+		unsigned len = mavlink_msg_esc_status_pack(0, 100, &out_msg, &esc_status.rpm[0]);
 
 		// Wait for the previous transmission to finish.
 		while (HW_UART_DEV.txstate == UART_TX_ACTIVE) {
 			chThdSleep(1);
 		}
 
-		uartStartSend(&HW_UART_DEV, packet_len, buf);
+		// TODO: len should already be the total length but for some reason the payload bytes are ignore
+		// and as a result the length is way to short - could be a mavlink 2 bug
+		uartStartSend(&HW_UART_DEV, len + MAVLINK_MSG_ID_ESC_STATUS_LEN, (const void *)&out_msg);
 	}
 }
 
