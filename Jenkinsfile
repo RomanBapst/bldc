@@ -41,7 +41,6 @@ node('') {
                     sh"git config user.name 'Jenkins CI'"
                     sh"git config user.email 'volodymyr.tymchenko@skypull.com'"
                     sh"git config credential.helper '!f() { sleep 1; echo \"username=${USERNAME}\npassword=${PASSWORD}\"; }; f'"
-                    sh"git config http.postBuffer 524288000"
                     sh"git tag -a JENKINS-${BUILD_CUSTOM_NAME} -m 'JENKINS-${BUILD_CUSTOM_NAME}'"
                     sh"git push origin --tags"
                 } finally {
