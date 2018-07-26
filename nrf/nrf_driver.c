@@ -111,7 +111,7 @@ void nrf_driver_start_pairing(int ms) {
 		return;
 	}
 
-	pairing_time_end = chVTGetSystemTimeX() + MS2ST(ms);
+	pairing_time_end = chVTGetSystemTimeX() + TIME_MS2I(ms);
 
 	if (!pairing_active) {
 		pairing_active = true;

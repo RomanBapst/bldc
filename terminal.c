@@ -98,23 +98,23 @@ void terminal_process_string(char *str) {
 		commands_printf("Calculated KV: %.2f rpm/volt\n", (double)mcpwm_get_kv_filtered());
 	} else if (strcmp(argv[0], "mem") == 0) {
 		size_t n, size;
-		n = chHeapStatus(NULL, &size);
+		n = 1;//chHeapStatus(NULL, &size);
 		commands_printf("core free memory : %u bytes", chCoreGetStatusX());
 		commands_printf("heap fragments   : %u", n);
 		commands_printf("heap free total  : %u bytes\n", size);
 	} else if (strcmp(argv[0], "threads") == 0) {
-		thread_t *tp;
-		static const char *states[] = {CH_STATE_NAMES};
-		commands_printf("    addr    stack prio refs     state           name time    ");
-		commands_printf("-------------------------------------------------------------");
-		tp = chRegFirstThread();
-		do {
-			commands_printf("%.8lx %.8lx %4lu %4lu %9s %14s %lu",
-					(uint32_t)tp, (uint32_t)tp->p_ctx.r13,
-					(uint32_t)tp->p_prio, (uint32_t)(tp->p_refs - 1),
-					states[tp->p_state], tp->p_name, (uint32_t)tp->p_time);
-			tp = chRegNextThread(tp);
-		} while (tp != NULL);
+		// thread_t *tp;
+		// static const char *states[] = {CH_STATE_NAMES};
+		// commands_printf("    addr    stack prio refs     state           name time    ");
+		// commands_printf("-------------------------------------------------------------");
+		// tp = chRegFirstThread();
+		// do {
+		// 	commands_printf("%.8lx %.8lx %4lu %4lu %9s %14s %lu",
+		// 			(uint32_t)tp, (uint32_t)tp->p_ctx.r13,
+		// 			(uint32_t)tp->p_prio, (uint32_t)(tp->p_refs - 1),
+		// 			states[tp->p_state], tp->p_name, (uint32_t)tp->p_time);
+		// 	tp = chRegNextThread(tp);
+		// } while (tp != NULL);
 		commands_printf("");
 	} else if (strcmp(argv[0], "fault") == 0) {
 		commands_printf("%s\n", mc_interface_fault_to_string(mc_interface_get_fault()));

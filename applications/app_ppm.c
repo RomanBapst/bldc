@@ -75,7 +75,7 @@ void app_ppm_start(void) {
 	chThdCreateStatic(ppm_thread_wa, sizeof(ppm_thread_wa), NORMALPRIO, ppm_thread, NULL);
 
 	chSysLock();
-	chVTSetI(&vt, MS2ST(1), update, NULL);
+	chVTSetI(&vt, TIME_MS2I(1), update, NULL);
 	chSysUnlock();
 #endif
 }
@@ -117,7 +117,7 @@ static void update(void *p) {
 	}
 
 	chSysLockFromISR();
-	chVTSetI(&vt, MS2ST(2), update, p);
+	chVTSetI(&vt, TIME_MS2I(2), update, p);
 	chEvtSignalI(ppm_tp, (eventmask_t) 1);
 	chSysUnlockFromISR();
 }
@@ -185,7 +185,7 @@ static THD_FUNCTION(ppm_thread, arg) {
 		const float ramp_time = fabsf(servo_val) > fabsf(servo_val_ramp) ? config.ramp_time_pos : config.ramp_time_neg;
 
 		if (ramp_time > 0.01) {
-			const float ramp_step = (float)ST2MS(chVTTimeElapsedSinceX(last_time)) / (ramp_time * 1000.0);
+			const float ramp_step = (float)TIME_S2I(chVTTimeElapsedSinceX(last_time)) / (ramp_time * 1000.0);
 			utils_step_towards(&servo_val_ramp, servo_val, ramp_step);
 			last_time = chVTGetSystemTimeX();
 			servo_val = servo_val_ramp;

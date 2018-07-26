@@ -1,3 +1,7 @@
 [submodule "mavlink/include/mavlink/v2.0"]
 	path = mavlink/include/mavlink/v2.0
 	url = https://bitbucket.org/suwissagl/mavlink_headers.git
+
+[submodule "ChibiOS"]
+	path = ChibiOS
+	url = git@github.com:ChibiOS/ChibiOS.git

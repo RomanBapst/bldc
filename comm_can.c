@@ -122,7 +122,7 @@ static THD_FUNCTION(cancom_read_thread, arg) {
 	chEvtRegister(&CANDx.rxfull_event, &el, 0);
 
 	while(!chThdShouldTerminateX()) {
-		if (chEvtWaitAnyTimeout(ALL_EVENTS, MS2ST(10)) == 0) {
+		if (chEvtWaitAnyTimeout(ALL_EVENTS, TIME_MS2I(10)) == 0) {
 			continue;
 		}
 
@@ -375,7 +375,7 @@ void comm_can_transmit_sid(uint32_t id, uint8_t *data, uint8_t len) {
 	memcpy(txmsg.data8, data, len);
 
 	chMtxLock(&can_mtx);
-	canTransmit(&CANDx, CAN_ANY_MAILBOX, &txmsg, MS2ST(20));
+	canTransmit(&CANDx, CAN_ANY_MAILBOX, &txmsg, TIME_MS2I(20));
 	chMtxUnlock(&can_mtx);
 
 #else
