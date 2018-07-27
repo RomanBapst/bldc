@@ -193,27 +193,21 @@ int main(void) {
 	LED_RED_ON();
 	LED_GREEN_ON();
 
-	//conf_general_init();
-	//ledpwm_init();
+	conf_general_init();
+	ledpwm_init();
 
-	//mc_configuration mcconf;
-	//conf_general_read_mc_configuration(&mcconf);
-	//mc_interface_init(&mcconf);
+	mc_configuration mcconf;
+	conf_general_read_mc_configuration(&mcconf);
+	mc_interface_init(&mcconf);
 
 	commands_init();
 	comm_usb_init();
 
-	for(;;) {
-		chThdSleepMilliseconds(250);
-		chnWrite(&SDU1, (const uint8_t *)"Hello from Arduino Leonardo!\r\n", 30);
-		//commands_printf("Motor stopped\n");
-	}
 
 
-
-// #if CAN_ENABLE
-// 	comm_can_init();
-// #endif
+#if CAN_ENABLE
+	comm_can_init();
+#endif
 
 	app_configuration appconf;
 	conf_general_read_app_configuration(&appconf);
