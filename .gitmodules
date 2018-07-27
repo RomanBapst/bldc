@@ -4,4 +4,4 @@
 
 [submodule "ChibiOS"]
 	path = ChibiOS
-	url = git@github.com:ChibiOS/ChibiOS.git
+	url = git@github.com:RomanBapst/ChibiOS.git
