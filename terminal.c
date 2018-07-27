@@ -90,6 +90,15 @@ void terminal_process_string(char *str) {
 	} else if (strcmp(argv[0], "stop") == 0) {
 		mc_interface_set_duty(0);
 		commands_printf("Motor stopped\n");
+	} else if (strcmp(argv[0], "duty") == 0) {
+		if (argc == 2) {
+			float duty;
+			sscanf(argv[1], "%f", &duty);
+			commands_printf("set duty to %.3f\n", (double)duty);
+			//mc_interface_set_pid_speed(duty);
+			mc_interface_set_duty(duty);
+			timeout_reset();
+		}
 	} else if (strcmp(argv[0], "last_adc_duration") == 0) {
 		commands_printf("Latest ADC duration: %.4f ms", (double)(mcpwm_get_last_adc_isr_duration() * 1000.0));
 		commands_printf("Latest injected ADC duration: %.4f ms", (double)(mc_interface_get_last_inj_adc_isr_duration() * 1000.0));
