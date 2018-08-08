@@ -21,14 +21,14 @@
 #define HW_NAME					"410"
 
 // Macros
-#define ENABLE_GATE()			palSetPad(GPIOC, 10)
-#define DISABLE_GATE()			palClearPad(GPIOC, 10)
-#define DCCAL_ON()				palSetPad(GPIOB, 12)
-#define DCCAL_OFF()				palClearPad(GPIOB, 12)
+#define ENABLE_GATE()			palSetPad(GPIOB, 12)
+#define DISABLE_GATE()			palClearPad(GPIOB, 12)
+#define DCCAL_ON()				palSetPad(GPIOC, 12)
+#define DCCAL_OFF()				palClearPad(GPIOC, 12)
 #define IS_DRV_FAULT()			(!palReadPad(GPIOC, 12))
 
-#define LED_GREEN_ON()			palSetPad(GPIOC, 4)
-#define LED_GREEN_OFF()			palClearPad(GPIOC, 4)
+#define LED_GREEN_ON()			palSetPad(GPIOB, 12)
+#define LED_GREEN_OFF()			palClearPad(GPIOB, 12)
 #define LED_RED_ON()			palSetPad(GPIOC, 5)
 #define LED_RED_OFF()			palClearPad(GPIOC, 5)
 
@@ -57,13 +57,13 @@
 #define ADC_IND_SENS1			2
 #define ADC_IND_SENS2			1
 #define ADC_IND_SENS3			0
-#define ADC_IND_CURR1			4
-#define ADC_IND_CURR2			3
+#define ADC_IND_CURR1			6
+#define ADC_IND_CURR2			9
 #define ADC_IND_VIN_SENS		8
 #define ADC_IND_EXT				10
 #define ADC_IND_EXT2			7
 #define ADC_IND_TEMP_MOS		5
-#define ADC_IND_TEMP_MOTOR		11
+#define ADC_IND_TEMP_MOTOR		3
 #define ADC_IND_VREFINT			6
 
 // ADC macros and settings
