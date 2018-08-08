@@ -77,6 +77,11 @@ void terminal_process_string(char *str) {
 
 	if (strcmp(argv[0], "ping") == 0) {
 		commands_printf("pong\n");
+	} else if (strcmp(argv[0], "adc") == 0) {
+		for (int i = 0; i < 12; i++) {
+			commands_printf("adc_%d %d\n", i, ADC_Value[i]);
+		}
+		commands_printf("adc \n");
 	} else if (strcmp(argv[0], "mot_set") == 0) {
 		if (argc == 3) {
 			float rpm;
