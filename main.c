@@ -183,135 +183,145 @@ int main(void) {
 	// Initialize the enable pins here and disable them
 	// to avoid excessive current draw at boot because of
 	// floating pins.
-#ifdef HW_HAS_DRV8313
-	INIT_BR();
-#endif
+// #ifdef HW_HAS_DRV8313
+// 	INIT_BR();
+// #endif
 
 	chThdSleepMilliseconds(1000);
 
 	hw_init_gpio();
-	LED_RED_ON();
-	LED_GREEN_ON();
+	//LED_RED_ON();
+	//LED_GREEN_ON();
 
 	conf_general_init();
-	ledpwm_init();
+	//ledpwm_init();
 
 	mc_configuration mcconf;
 	conf_general_read_mc_configuration(&mcconf);
 	mc_interface_init(&mcconf);
 
-	commands_init();
+	//commands_init();
 	comm_usb_init();
 
+	char tmp[] = "Hello from Myxa!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!.\r\n";
 
-
-#if CAN_ENABLE
-	comm_can_init();
-#endif
-
-	app_configuration appconf;
-	conf_general_read_app_configuration(&appconf);
-	app_set_configuration(&appconf);
-
-#ifdef HW_HAS_PERMANENT_NRF
-	conf_general_permanent_nrf_found = nrf_driver_init();
-	if (conf_general_permanent_nrf_found) {
-		rfhelp_restart();
-	} else {
-		nrf_driver_stop();
-		// Set the nrf SPI pins to the general SPI interface so that
-		// an external NRF can be used with the NRF app.
-		spi_sw_change_pins(
-				HW_SPI_PORT_NSS, HW_SPI_PIN_NSS,
-				HW_SPI_PORT_SCK, HW_SPI_PIN_SCK,
-				HW_SPI_PORT_MOSI, HW_SPI_PIN_MOSI,
-				HW_SPI_PORT_MISO, HW_SPI_PIN_MISO);
+	while(true) {
+		//LED_GREEN_ON();
+		chThdSleepMilliseconds(100);
+		//chnWrite(&SDU1, (const uint8_t *)&tmp[0], sizeof(tmp));
+		//LED_GREEN_OFF();
+		chThdSleepMilliseconds(100);
 	}
-#endif
 
-	timeout_init();
-	timeout_configure(appconf.timeout_msec, appconf.timeout_brake_current);
 
-#if WS2811_ENABLE
-	ws2811_init();
-#if !WS2811_TEST
-	led_external_init();
-#endif
-#endif
 
-#if SERVO_OUT_ENABLE
-	servo_simple_init();
-#endif
+// #if CAN_ENABLE
+// 	comm_can_init();
+// #endif
 
-	// Threads
-	chThdCreateStatic(periodic_thread_wa, sizeof(periodic_thread_wa), NORMALPRIO, periodic_thread, NULL);
-	chThdCreateStatic(timer_thread_wa, sizeof(timer_thread_wa), NORMALPRIO, timer_thread, NULL);
+// 	app_configuration appconf;
+// 	conf_general_read_app_configuration(&appconf);
+// 	app_set_configuration(&appconf);
 
-#if WS2811_TEST
-	unsigned int color_ind = 0;
-	const int num = 4;
-	const uint32_t colors[] = {COLOR_RED, COLOR_GOLD, COLOR_GRAY, COLOR_MAGENTA, COLOR_BLUE};
-	const int brightness_set = 100;
+// #ifdef HW_HAS_PERMANENT_NRF
+// 	conf_general_permanent_nrf_found = nrf_driver_init();
+// 	if (conf_general_permanent_nrf_found) {
+// 		rfhelp_restart();
+// 	} else {
+// 		nrf_driver_stop();
+// 		// Set the nrf SPI pins to the general SPI interface so that
+// 		// an external NRF can be used with the NRF app.
+// 		spi_sw_change_pins(
+// 				HW_SPI_PORT_NSS, HW_SPI_PIN_NSS,
+// 				HW_SPI_PORT_SCK, HW_SPI_PIN_SCK,
+// 				HW_SPI_PORT_MOSI, HW_SPI_PIN_MOSI,
+// 				HW_SPI_PORT_MISO, HW_SPI_PIN_MISO);
+// 	}
+// #endif
 
-	for (;;) {
-		chThdSleepMilliseconds(1000);
+// 	timeout_init();
+// 	timeout_configure(appconf.timeout_msec, appconf.timeout_brake_current);
 
-		for (int i = 0;i < brightness_set;i++) {
-			ws2811_set_brightness(i);
-			chThdSleepMilliseconds(10);
-		}
+// #if WS2811_ENABLE
+// 	ws2811_init();
+// #if !WS2811_TEST
+// 	led_external_init();
+// #endif
+// #endif
 
-		chThdSleepMilliseconds(1000);
+// #if SERVO_OUT_ENABLE
+// 	servo_simple_init();
+// #endif
 
-		for(int i = -num;i <= WS2811_LED_NUM;i++) {
-			ws2811_set_led_color(i - 1, COLOR_BLACK);
-			ws2811_set_led_color(i + num, colors[color_ind]);
+// 	// Threads
+// 	chThdCreateStatic(periodic_thread_wa, sizeof(periodic_thread_wa), NORMALPRIO, periodic_thread, NULL);
+// 	chThdCreateStatic(timer_thread_wa, sizeof(timer_thread_wa), NORMALPRIO, timer_thread, NULL);
 
-			ws2811_set_led_color(0, COLOR_RED);
-			ws2811_set_led_color(WS2811_LED_NUM - 1, COLOR_GREEN);
+// #if WS2811_TEST
+// 	unsigned int color_ind = 0;
+// 	const int num = 4;
+// 	const uint32_t colors[] = {COLOR_RED, COLOR_GOLD, COLOR_GRAY, COLOR_MAGENTA, COLOR_BLUE};
+// 	const int brightness_set = 100;
 
-			chThdSleepMilliseconds(50);
-		}
+// 	for (;;) {
+// 		chThdSleepMilliseconds(1000);
 
-		for (int i = 0;i < brightness_set;i++) {
-			ws2811_set_brightness(brightness_set - i);
-			chThdSleepMilliseconds(10);
-		}
+// 		for (int i = 0;i < brightness_set;i++) {
+// 			ws2811_set_brightness(i);
+// 			chThdSleepMilliseconds(10);
+// 		}
 
-		color_ind++;
-		if (color_ind >= sizeof(colors) / sizeof(uint32_t)) {
-			color_ind = 0;
-		}
+// 		chThdSleepMilliseconds(1000);
 
-		static int asd = 0;
-		asd++;
-		if (asd >= 3) {
-			asd = 0;
+// 		for(int i = -num;i <= WS2811_LED_NUM;i++) {
+// 			ws2811_set_led_color(i - 1, COLOR_BLACK);
+// 			ws2811_set_led_color(i + num, colors[color_ind]);
 
-			for (unsigned int i = 0;i < sizeof(colors) / sizeof(uint32_t);i++) {
-				ws2811_set_all(colors[i]);
+// 			ws2811_set_led_color(0, COLOR_RED);
+// 			ws2811_set_led_color(WS2811_LED_NUM - 1, COLOR_GREEN);
 
-				for (int i = 0;i < brightness_set;i++) {
-					ws2811_set_brightness(i);
-					chThdSleepMilliseconds(2);
-				}
+// 			chThdSleepMilliseconds(50);
+// 		}
 
-				chThdSleepMilliseconds(100);
+// 		for (int i = 0;i < brightness_set;i++) {
+// 			ws2811_set_brightness(brightness_set - i);
+// 			chThdSleepMilliseconds(10);
+// 		}
 
-				for (int i = 0;i < brightness_set;i++) {
-					ws2811_set_brightness(brightness_set - i);
-					chThdSleepMilliseconds(2);
-				}
-			}
-		}
-	}
-#endif
+// 		color_ind++;
+// 		if (color_ind >= sizeof(colors) / sizeof(uint32_t)) {
+// 			color_ind = 0;
+// 		}
 
-	for(;;) {
-		chThdSleepMilliseconds(10);
+// 		static int asd = 0;
+// 		asd++;
+// 		if (asd >= 3) {
+// 			asd = 0;
 
-		if (encoder_is_configured()) {
-			//		comm_can_set_pos(0, encoder_read_deg());
-		}
-	}
+// 			for (unsigned int i = 0;i < sizeof(colors) / sizeof(uint32_t);i++) {
+// 				ws2811_set_all(colors[i]);
+
+// 				for (int i = 0;i < brightness_set;i++) {
+// 					ws2811_set_brightness(i);
+// 					chThdSleepMilliseconds(2);
+// 				}
+
+// 				chThdSleepMilliseconds(100);
+
+// 				for (int i = 0;i < brightness_set;i++) {
+// 					ws2811_set_brightness(brightness_set - i);
+// 					chThdSleepMilliseconds(2);
+// 				}
+// 			}
+// 		}
+// 	}
+// #endif
+
+// 	for(;;) {
+// 		chThdSleepMilliseconds(10);
+
+// 		if (encoder_is_configured()) {
+// 			//		comm_can_set_pos(0, encoder_read_deg());
+// 		}
+// 	}
 }

@@ -412,7 +412,7 @@ void mcpwm_foc_init(volatile mc_configuration *configuration) {
 	TIM_CtrlPWMOutputs(TIM1, ENABLE);
 
 	// ADC sampling locations
-	stop_pwm_hw();
+	start_pwm_hw();
 
 	// Sample intervals. For now they are fixed with voltage samples in the center of V7
 	// and current samples in the center of V0
@@ -425,9 +425,9 @@ void mcpwm_foc_init(volatile mc_configuration *configuration) {
 	utils_sys_unlock_cnt();
 
 	// Calibrate current offset
-	ENABLE_GATE();
-	DCCAL_OFF();
-	do_dc_cal();
+	DISABLE_GATE();
+	//DCCAL_OFF();
+	//do_dc_cal();
 
 	// Various time measurements
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM12, ENABLE);
@@ -439,17 +439,17 @@ void mcpwm_foc_init(volatile mc_configuration *configuration) {
 	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
 	TIM_TimeBaseInit(TIM12, &TIM_TimeBaseStructure);
 
-	TIM_Cmd(TIM12, ENABLE);
+	//TIM_Cmd(TIM12, ENABLE);
 
 	// Start threads
-	timer_thd_stop = false;
-	chThdCreateStatic(timer_thread_wa, sizeof(timer_thread_wa), NORMALPRIO, timer_thread, NULL);
+	// timer_thd_stop = false;
+	// chThdCreateStatic(timer_thread_wa, sizeof(timer_thread_wa), NORMALPRIO, timer_thread, NULL);
 
 	// WWDG configuration
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_WWDG, ENABLE);
-	WWDG_SetPrescaler(WWDG_Prescaler_1);
-	WWDG_SetWindowValue(255);
-	WWDG_Enable(100);
+	// RCC_APB1PeriphClockCmd(RCC_APB1Periph_WWDG, ENABLE);
+	// WWDG_SetPrescaler(WWDG_Prescaler_1);
+	// WWDG_SetWindowValue(255);
+	// WWDG_Enable(100);
 
 	m_init_done = true;
 }
@@ -1492,6 +1492,8 @@ void mcpwm_foc_adc_int_handler(void *p, uint32_t flags) {
 
 	int curr0 = ADC_Value[ADC_IND_CURR1];
 	int curr1 = ADC_Value[ADC_IND_CURR2];
+
+	return;
 
 #ifdef HW_HAS_3_SHUNTS
 	int curr2 = ADC_Value[ADC_IND_CURR3];
