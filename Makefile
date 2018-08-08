@@ -112,7 +112,7 @@ include nrf/nrf.mk
 
 
 # Define linker script file here
-LDSCRIPT= $(CHIBIOS)/os/common/startup/ARMCMx/compilers/GCC/ld/STM32F407xG.ld
+LDSCRIPT= $(CHIBIOS)/os/common/startup/ARMCMx/compilers/GCC/ld/STM32F446xE.ld
 #ld_eeprom_emu.ld
 
 # C sources that can be compiled in ARM or THUMB mode depending on the global
