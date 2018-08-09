@@ -59,7 +59,7 @@
 #define ADC_IND_SENS3			0
 #define ADC_IND_CURR1			6
 #define ADC_IND_CURR2			9
-#define ADC_IND_VIN_SENS		8
+#define ADC_IND_VIN_SENS		4
 #define ADC_IND_EXT				10
 #define ADC_IND_EXT2			7
 #define ADC_IND_TEMP_MOS		5
@@ -86,7 +86,7 @@
 #endif
 
 // Input voltage
-#define GET_INPUT_VOLTAGE()		((V_REG / 4095.0) * (float)ADC_Value[ADC_IND_VIN_SENS] * ((VIN_R1 + VIN_R2) / VIN_R2))
+#define GET_INPUT_VOLTAGE()		V_REG / 66.0f
 
 // Voltage on ADC channel
 #define ADC_VOLTS(ch)			((float)ADC_Value[ch] / 4095.0 * V_REG)
