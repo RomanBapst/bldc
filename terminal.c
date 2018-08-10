@@ -91,7 +91,9 @@ void terminal_process_string(char *str) {
 			commands_printf("command for motor %.1f is %.4f\n", (double)motor_id, (double)rpm);
 			comm_can_set_rpm((uint8_t)motor_id, rpm);
 		}
-
+	} else if (strcmp(argv[0], "current") == 0) {
+		commands_printf("current_1 %d\n", ADC_Value[ADC_IND_CURR1]);
+		commands_printf("current_2 %d\n", ADC_Value[ADC_IND_CURR2]);
 	} else if (strcmp(argv[0], "stop") == 0) {
 		mc_interface_set_duty(0);
 		commands_printf("Motor stopped\n");

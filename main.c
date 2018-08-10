@@ -200,18 +200,8 @@ int main(void) {
 	conf_general_read_mc_configuration(&mcconf);
 	mc_interface_init(&mcconf);
 
-	//commands_init();
+	commands_init();
 	comm_usb_init();
-
-	char tmp[] = "Hello from Myxa!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!.\r\n";
-
-	while(true) {
-		//LED_GREEN_ON();
-		chThdSleepMilliseconds(100);
-		//chnWrite(&SDU1, (const uint8_t *)&tmp[0], sizeof(tmp));
-		//LED_GREEN_OFF();
-		chThdSleepMilliseconds(100);
-	}
 
 
 
@@ -219,9 +209,9 @@ int main(void) {
 // 	comm_can_init();
 // #endif
 
-// 	app_configuration appconf;
-// 	conf_general_read_app_configuration(&appconf);
-// 	app_set_configuration(&appconf);
+	app_configuration appconf;
+	conf_general_read_app_configuration(&appconf);
+	app_set_configuration(&appconf);
 
 // #ifdef HW_HAS_PERMANENT_NRF
 // 	conf_general_permanent_nrf_found = nrf_driver_init();
@@ -239,8 +229,8 @@ int main(void) {
 // 	}
 // #endif
 
-// 	timeout_init();
-// 	timeout_configure(appconf.timeout_msec, appconf.timeout_brake_current);
+	timeout_init();
+	timeout_configure(appconf.timeout_msec, appconf.timeout_brake_current);
 
 // #if WS2811_ENABLE
 // 	ws2811_init();
@@ -253,9 +243,9 @@ int main(void) {
 // 	servo_simple_init();
 // #endif
 
-// 	// Threads
-// 	chThdCreateStatic(periodic_thread_wa, sizeof(periodic_thread_wa), NORMALPRIO, periodic_thread, NULL);
-// 	chThdCreateStatic(timer_thread_wa, sizeof(timer_thread_wa), NORMALPRIO, timer_thread, NULL);
+	// Threads
+	chThdCreateStatic(periodic_thread_wa, sizeof(periodic_thread_wa), NORMALPRIO, periodic_thread, NULL);
+	chThdCreateStatic(timer_thread_wa, sizeof(timer_thread_wa), NORMALPRIO, timer_thread, NULL);
 
 // #if WS2811_TEST
 // 	unsigned int color_ind = 0;
@@ -317,11 +307,11 @@ int main(void) {
 // 	}
 // #endif
 
-// 	for(;;) {
-// 		chThdSleepMilliseconds(10);
+	for(;;) {
+		chThdSleepMilliseconds(10);
 
-// 		if (encoder_is_configured()) {
-// 			//		comm_can_set_pos(0, encoder_read_deg());
-// 		}
-// 	}
+		if (encoder_is_configured()) {
+			//		comm_can_set_pos(0, encoder_read_deg());
+		}
+	}
 }

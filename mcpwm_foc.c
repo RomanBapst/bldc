@@ -425,9 +425,9 @@ void mcpwm_foc_init(volatile mc_configuration *configuration) {
 	utils_sys_unlock_cnt();
 
 	// Calibrate current offset
-	DISABLE_GATE();
-	//DCCAL_OFF();
-	//do_dc_cal();
+	ENABLE_GATE();
+	DCCAL_OFF();
+	do_dc_cal();
 
 	// Various time measurements
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM12, ENABLE);
@@ -439,17 +439,17 @@ void mcpwm_foc_init(volatile mc_configuration *configuration) {
 	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
 	TIM_TimeBaseInit(TIM12, &TIM_TimeBaseStructure);
 
-	//TIM_Cmd(TIM12, ENABLE);
+	TIM_Cmd(TIM12, ENABLE);
 
 	// Start threads
-	// timer_thd_stop = false;
-	// chThdCreateStatic(timer_thread_wa, sizeof(timer_thread_wa), NORMALPRIO, timer_thread, NULL);
+	timer_thd_stop = false;
+	chThdCreateStatic(timer_thread_wa, sizeof(timer_thread_wa), NORMALPRIO, timer_thread, NULL);
 
 	// WWDG configuration
-	// RCC_APB1PeriphClockCmd(RCC_APB1Periph_WWDG, ENABLE);
-	// WWDG_SetPrescaler(WWDG_Prescaler_1);
-	// WWDG_SetWindowValue(255);
-	// WWDG_Enable(100);
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_WWDG, ENABLE);
+	WWDG_SetPrescaler(WWDG_Prescaler_1);
+	WWDG_SetWindowValue(255);
+	WWDG_Enable(100);
 
 	m_init_done = true;
 }
@@ -1493,8 +1493,6 @@ void mcpwm_foc_adc_int_handler(void *p, uint32_t flags) {
 	int curr0 = ADC_Value[ADC_IND_CURR1];
 	int curr1 = ADC_Value[ADC_IND_CURR2];
 
-	return;
-
 #ifdef HW_HAS_3_SHUNTS
 	int curr2 = ADC_Value[ADC_IND_CURR3];
 #endif
@@ -2047,29 +2045,32 @@ static THD_FUNCTION(timer_thread, arg) {
 static void do_dc_cal(void) {
 	DCCAL_ON();
 
-	// Wait max 5 seconds
-	int cnt = 0;
-	while(IS_DRV_FAULT()){
-		chThdSleepMilliseconds(1);
-		cnt++;
-		if (cnt > 5000) {
-			break;
-		}
-	};
+// 	// Wait max 5 seconds
+// 	int cnt = 0;
+// 	while(IS_DRV_FAULT()){
+// 		chThdSleepMilliseconds(1);
+// 		cnt++;
+// 		if (cnt > 5000) {
+// 			break;
+// 		}
+// 	};
 
-	chThdSleepMilliseconds(1000);
-	m_curr0_sum = 0;
-	m_curr1_sum = 0;
-#ifdef HW_HAS_3_SHUNTS
-	m_curr2_sum = 0;
-#endif
-	m_curr_samples = 0;
-	while(m_curr_samples < 4000) {};
-	m_curr0_offset = m_curr0_sum / m_curr_samples;
-	m_curr1_offset = m_curr1_sum / m_curr_samples;
-#ifdef HW_HAS_3_SHUNTS
-	m_curr2_offset = m_curr2_sum / m_curr_samples;
-#endif
+// 	chThdSleepMilliseconds(1000);
+// 	m_curr0_sum = 0;
+// 	m_curr1_sum = 0;
+// #ifdef HW_HAS_3_SHUNTS
+// 	m_curr2_sum = 0;
+// #endif
+// 	m_curr_samples = 0;
+// 	while(m_curr_samples < 4000) {};
+// 	m_curr0_offset = m_curr0_sum / m_curr_samples;
+// 	m_curr1_offset = m_curr1_sum / m_curr_samples;
+// #ifdef HW_HAS_3_SHUNTS
+// 	m_curr2_offset = m_curr2_sum / m_curr_samples;
+// #endif
+// 
+	m_curr0_offset = 2070;
+	m_curr1_offset = 2040;
 	DCCAL_OFF();
 	m_dccal_done = true;
 }

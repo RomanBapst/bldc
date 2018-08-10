@@ -23,14 +23,14 @@
 // Macros
 #define ENABLE_GATE()			palSetPad(GPIOB, 12)
 #define DISABLE_GATE()			palClearPad(GPIOB, 12)
-#define DCCAL_ON()				palSetPad(GPIOC, 12)
-#define DCCAL_OFF()				palClearPad(GPIOC, 12)
-#define IS_DRV_FAULT()			(!palReadPad(GPIOC, 12))
+#define DCCAL_ON()				//palSetPad(GPIOC, 12)
+#define DCCAL_OFF()				//palClearPad(GPIOC, 12)
+#define IS_DRV_FAULT()			(!palReadPad(GPIOC, 15))
 
-#define LED_GREEN_ON()			palSetPad(GPIOB, 12)
-#define LED_GREEN_OFF()			palClearPad(GPIOB, 12)
-#define LED_RED_ON()			palSetPad(GPIOC, 5)
-#define LED_RED_OFF()			palClearPad(GPIOC, 5)
+#define LED_GREEN_ON()			//palSetPad(GPIOB, 12)
+#define LED_GREEN_OFF()			//palClearPad(GPIOB, 12)
+#define LED_RED_ON()			//palSetPad(GPIOC, 5)
+#define LED_RED_OFF()			//palClearPad(GPIOC, 5)
 
 /*
  * ADC Vector
@@ -57,8 +57,8 @@
 #define ADC_IND_SENS1			2
 #define ADC_IND_SENS2			1
 #define ADC_IND_SENS3			0
-#define ADC_IND_CURR1			6
-#define ADC_IND_CURR2			9
+#define ADC_IND_CURR1			8
+#define ADC_IND_CURR2			11
 #define ADC_IND_VIN_SENS		4
 #define ADC_IND_EXT				10
 #define ADC_IND_EXT2			7
@@ -73,20 +73,20 @@
 #define V_REG					3.3
 #endif
 #ifndef VIN_R1
-#define VIN_R1					39000.0
+#define VIN_R1					17800.0
 #endif
 #ifndef VIN_R2
-#define VIN_R2					2200.0
+#define VIN_R2					4800.0
 #endif
 #ifndef CURRENT_AMP_GAIN
 #define CURRENT_AMP_GAIN		10.0
 #endif
 #ifndef CURRENT_SHUNT_RES
-#define CURRENT_SHUNT_RES		0.001
+#define CURRENT_SHUNT_RES		0.003
 #endif
 
 // Input voltage
-#define GET_INPUT_VOLTAGE()		V_REG / 66.0f
+#define GET_INPUT_VOLTAGE()		(float)ADC_Value[ADC_IND_VIN_SENS] / 66.0f
 
 // Voltage on ADC channel
 #define ADC_VOLTS(ch)			((float)ADC_Value[ch] / 4095.0 * V_REG)
