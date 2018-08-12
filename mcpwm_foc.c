@@ -1588,6 +1588,9 @@ void mcpwm_foc_adc_int_handler(void *p, uint32_t flags) {
 			m_samples.avg_current_tot += -((float)curr1 * FAC_CURRENT);
 			m_samples.avg_voltage_tot += GET_INPUT_VOLTAGE();
 			m_samples.sample_num++;
+			for (int ii = 0; ii < 12; ii++) {
+				commands_printf("adc %d %.5f", ii,  (double)ADC_Value[ii]);
+			}
 			TIMER_UPDATE_DUTY(0, 0, 0);
 		} else if (inductance_state == 5) {
 			TIMER_UPDATE_DUTY(0, duty_cnt, duty_cnt);
