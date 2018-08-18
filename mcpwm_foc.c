@@ -149,8 +149,8 @@ static volatile bool timer_thd_stop;
 #define TIMER_UPDATE_DUTY(duty1, duty2, duty3) \
 		TIM1->CR1 |= TIM_CR1_UDIS; \
 		TIM1->CCR1 = duty1; \
-		TIM1->CCR2 = duty3; \
-		TIM1->CCR3 = duty2; \
+		TIM1->CCR2 = duty2; \
+		TIM1->CCR3 = duty3; \
 		TIM1->CR1 &= ~TIM_CR1_UDIS;
 #endif
 
@@ -180,8 +180,8 @@ static volatile bool timer_thd_stop;
 		TIM1->CR1 |= TIM_CR1_UDIS; \
 		TIM8->CR1 |= TIM_CR1_UDIS; \
 		TIM1->CCR1 = duty1; \
-		TIM1->CCR2 = duty3; \
-		TIM1->CCR3 = duty2; \
+		TIM1->CCR2 = duty2; \
+		TIM1->CCR3 = duty3; \
 		TIM8->CCR1 = samp; \
 		TIM1->CR1 &= ~TIM_CR1_UDIS; \
 		TIM8->CR1 &= ~TIM_CR1_UDIS;
