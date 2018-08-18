@@ -57,8 +57,8 @@
 #define ADC_IND_SENS1			2
 #define ADC_IND_SENS2			1
 #define ADC_IND_SENS3			0
-#define ADC_IND_CURR1			8
-#define ADC_IND_CURR2			11
+#define ADC_IND_CURR1			11
+#define ADC_IND_CURR2			8
 #define ADC_IND_VIN_SENS		4
 #define ADC_IND_EXT				10
 #define ADC_IND_EXT2			7
