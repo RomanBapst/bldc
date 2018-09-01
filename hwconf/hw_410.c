@@ -57,6 +57,13 @@ void hw_init_gpio(void) {
 			PAL_STM32_OSPEED_HIGHEST);
 	DISABLE_GATE();
 
+	palSetPadMode(GPIOB, 2,
+			PAL_MODE_OUTPUT_PUSHPULL |
+			PAL_STM32_OSPEED_HIGHEST);
+
+	// current gain selection
+	palClearPad(GPIOB, 2);
+
 	// // GPIOB (DCCAL)
 	// palSetPadMode(GPIOB, 12,
 	// 		PAL_MODE_OUTPUT_PUSHPULL |
