@@ -1,0 +1,5 @@
+[submodule "ChibiOS"]
+	path = ChibiOS
+	url = git@github.com:RomanBapst/ChibiOS.git
+
+
