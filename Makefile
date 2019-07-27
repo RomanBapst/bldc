@@ -93,16 +93,17 @@ endif
 PROJECT = BLDC_4_ChibiOS
 
 # Imported source files and paths
-CHIBIOS = ChibiOS_3.0.2
+CHIBIOS = ChibiOS
 # Startup files
-include $(CHIBIOS)/os/common/ports/ARMCMx/compilers/GCC/mk/startup_stm32f4xx.mk
+include $(CHIBIOS)/os/common/startup/ARMCMx/compilers/GCC/mk/startup_stm32f4xx.mk
+include $(CHIBIOS)/os/license/license.mk
 # HAL-OSAL files
 include $(CHIBIOS)/os/hal/hal.mk
 include $(CHIBIOS)/os/hal/ports/STM32/STM32F4xx/platform.mk
 include $(CHIBIOS)/os/hal/osal/rt/osal.mk
 # RTOS files
 include $(CHIBIOS)/os/rt/rt.mk
-include $(CHIBIOS)/os/rt/ports/ARMCMx/compilers/GCC/mk/port_v7m.mk
+include $(CHIBIOS)/os/common/ports/ARMCMx/compilers/GCC/mk/port_v7m.mk
 # Other files
 include hwconf/hwconf.mk
 include applications/applications.mk
@@ -112,16 +113,13 @@ include imu/imu.mk
 include blackmagic/blackmagic.mk
 
 # Define linker script file here
-LDSCRIPT= ld_eeprom_emu.ld
+#LDSCRIPT= ld_eeprom_emu_f446.ld
+LDSCRIPT= $(CHIBIOS)/os/common/startup/ARMCMx/compilers/GCC/ld/STM32F446xE.ld
+
 
 # C sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
-CSRC = $(STARTUPSRC) \
-       $(KERNSRC) \
-       $(PORTSRC) \
-       $(OSALSRC) \
-       $(HALSRC) \
-       $(PLATFORMSRC) \
+CSRC = $(ALLCSRC) \
        $(CHIBIOS)/os/hal/lib/streams/chprintf.c \
        $(CHIBIOS)/os/various/syscalls.c \
        board.c \
@@ -164,7 +162,7 @@ CSRC = $(STARTUPSRC) \
 
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
-CPPSRC =
+CPPSRC = $(ALLCPPSRC)
 
 # C sources to be compiled in ARM mode regardless of the global setting.
 # NOTE: Mixing ARM and THUMB mode enables the -mthumb-interwork compiler
@@ -187,9 +185,9 @@ TCSRC =
 TCPPSRC =
 
 # List ASM source files here
-ASMSRC = $(STARTUPASM) $(PORTASM) $(OSALASM)
+ASMXSRC = $(ALLASMSRC) $(STARTUPASM) $(PORTASM) $(OSALASM)
 
-INCDIR = $(STARTUPINC) $(KERNINC) $(PORTINC) $(OSALINC) \
+INCDIR = $(ALLINC) $(STARTUPINC) $(KERNINC) $(PORTINC) $(OSALINC) \
          $(HALINC) $(PLATFORMINC) \
          $(CHIBIOS)/os/various \
          $(CHIBIOS)/os/hal/lib/streams \
@@ -297,8 +295,11 @@ upload-pi: build/$(PROJECT).bin
 upload-pi-remote: build/$(PROJECT).elf
 	./upload_remote_pi build/$(PROJECT).elf ted 10.42.0.199 22
 
+upload-myxa: build/$(PROJECT).bin
+	python px_uploader.py build/$(PROJECT).bin --port /dev/ttyACM0
+
 debug-start:
 	openocd -f stm32-bv_openocd.cfg
 
-RULESPATH = $(CHIBIOS)/os/common/ports/ARMCMx/compilers/GCC
+RULESPATH = $(CHIBIOS)/os/common/startup/ARMCMx/compilers/GCC/mk
 include $(RULESPATH)/rules.mk
