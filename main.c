@@ -80,6 +80,10 @@ static THD_WORKING_AREA(flash_integrity_check_thread_wa, 256);
 static THD_FUNCTION(flash_integrity_check_thread, arg) {
 	(void)arg;
 
+#ifdef SKIP_FLASH_CORRUPTION_CHECK
+	return;
+#endif
+
 	chRegSetThreadName("Flash check");
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_CRC, ENABLE);
 
@@ -201,6 +205,7 @@ int main(void) {
 	timer_init();
 	conf_general_init();
 
+#ifndef SKIP_FLASH_CORRUPTION_CHECK
 	if( flash_helper_verify_flash_memory() == FAULT_CODE_FLASH_CORRUPTION )	{
 		// Loop here, it is not safe to run any code
 		while (1) {
@@ -210,7 +215,7 @@ int main(void) {
 			LED_RED_OFF();
 		}
 	}
-
+#endif
 	ledpwm_init();
 
 	mc_configuration mcconf;
