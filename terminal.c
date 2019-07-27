@@ -91,7 +91,7 @@ void terminal_process_string(char *str) {
 		commands_printf("Calculated KV: %.2f rpm/volt\n", (double)mcpwm_get_kv_filtered());
 	} else if (strcmp(argv[0], "mem") == 0) {
 		size_t n, size;
-		n = chHeapStatus(NULL, &size);
+		n = chHeapStatus(NULL, &size, NULL);
 		commands_printf("core free memory : %u bytes", chCoreGetStatusX());
 		commands_printf("heap fragments   : %u", n);
 		commands_printf("heap free total  : %u bytes\n", size);
@@ -103,10 +103,10 @@ void terminal_process_string(char *str) {
 		tp = chRegFirstThread();
 		do {
 			commands_printf("%.8lx %.8lx %4lu %4lu %9s %14s %lu (%.1f %%)",
-					(uint32_t)tp, (uint32_t)tp->p_ctx.r13,
-					(uint32_t)tp->p_prio, (uint32_t)(tp->p_refs - 1),
-					states[tp->p_state], tp->p_name, (uint32_t)tp->p_time,
-					(double)(100.0 * (float)tp->p_time / (float)chVTGetSystemTimeX()));
+					(uint32_t)tp, (uint32_t)0,
+					(uint32_t)tp->prio, (uint32_t)(tp->refs - 1),
+					states[tp->state], tp->name, (uint32_t)tp->time,
+					(double)(100.0 * (float)tp->time / (float)chVTGetSystemTimeX()));
 			tp = chRegNextThread(tp);
 		} while (tp != NULL);
 		commands_printf("");
