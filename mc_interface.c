@@ -72,16 +72,16 @@ static volatile float m_motor_current_unbalance_error_rate;
 
 // Sampling variables
 #define ADC_SAMPLE_MAX_LEN		2000
-__attribute__((section(".ram4"))) static volatile int16_t m_curr0_samples[ADC_SAMPLE_MAX_LEN];
-__attribute__((section(".ram4"))) static volatile int16_t m_curr1_samples[ADC_SAMPLE_MAX_LEN];
-__attribute__((section(".ram4"))) static volatile int16_t m_ph1_samples[ADC_SAMPLE_MAX_LEN];
-__attribute__((section(".ram4"))) static volatile int16_t m_ph2_samples[ADC_SAMPLE_MAX_LEN];
-__attribute__((section(".ram4"))) static volatile int16_t m_ph3_samples[ADC_SAMPLE_MAX_LEN];
-__attribute__((section(".ram4"))) static volatile int16_t m_vzero_samples[ADC_SAMPLE_MAX_LEN];
-__attribute__((section(".ram4"))) static volatile uint8_t m_status_samples[ADC_SAMPLE_MAX_LEN];
-__attribute__((section(".ram4"))) static volatile int16_t m_curr_fir_samples[ADC_SAMPLE_MAX_LEN];
-__attribute__((section(".ram4"))) static volatile int16_t m_f_sw_samples[ADC_SAMPLE_MAX_LEN];
-__attribute__((section(".ram4"))) static volatile int8_t m_phase_samples[ADC_SAMPLE_MAX_LEN];
+__attribute__((section(".ram0"))) static volatile int16_t m_curr0_samples[ADC_SAMPLE_MAX_LEN];
+__attribute__((section(".ram0"))) static volatile int16_t m_curr1_samples[ADC_SAMPLE_MAX_LEN];
+__attribute__((section(".ram0"))) static volatile int16_t m_ph1_samples[ADC_SAMPLE_MAX_LEN];
+__attribute__((section(".ram0"))) static volatile int16_t m_ph2_samples[ADC_SAMPLE_MAX_LEN];
+__attribute__((section(".ram0"))) static volatile int16_t m_ph3_samples[ADC_SAMPLE_MAX_LEN];
+__attribute__((section(".ram0"))) static volatile int16_t m_vzero_samples[ADC_SAMPLE_MAX_LEN];
+__attribute__((section(".ram0"))) static volatile uint8_t m_status_samples[ADC_SAMPLE_MAX_LEN];
+__attribute__((section(".ram0"))) static volatile int16_t m_curr_fir_samples[ADC_SAMPLE_MAX_LEN];
+__attribute__((section(".ram0"))) static volatile int16_t m_f_sw_samples[ADC_SAMPLE_MAX_LEN];
+__attribute__((section(".ram0"))) static volatile int8_t m_phase_samples[ADC_SAMPLE_MAX_LEN];
 
 static volatile int m_sample_len;
 static volatile int m_sample_int;
@@ -178,6 +178,8 @@ void mc_interface_init(mc_configuration *configuration) {
 		break;
 	}
 #endif
+
+	m_conf.motor_type = MOTOR_TYPE_FOC;
 
 	// Initialize selected implementation
 	switch (m_conf.motor_type) {
