@@ -37,6 +37,10 @@
 
 #include "conf_mc_app_default.h"
 
+#ifndef assert_param
+#define assert_param(expr) ((void)0)
+#endif
+
 // EEPROM settings
 #define EEPROM_BASE_MCCONF		1000
 #define EEPROM_BASE_APPCONF		2000
