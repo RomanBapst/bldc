@@ -89,6 +89,7 @@ static volatile int m_curr_unbalance;
 static volatile bool m_phase_override;
 static volatile float m_phase_now_override;
 static volatile float m_duty_cycle_set;
+static volatile float m_duty_set_prev;
 static volatile float m_id_set;
 static volatile float m_iq_set;
 static volatile float m_openloop_speed;
@@ -153,8 +154,8 @@ static volatile bool timer_thd_stop;
 #define TIMER_UPDATE_DUTY(duty1, duty2, duty3) \
 		TIM1->CR1 |= TIM_CR1_UDIS; \
 		TIM1->CCR1 = duty1; \
-		TIM1->CCR2 = duty3; \
-		TIM1->CCR3 = duty2; \
+		TIM1->CCR2 = duty2; \
+		TIM1->CCR3 = duty3; \
 		TIM1->CR1 &= ~TIM_CR1_UDIS;
 #endif
 
@@ -184,8 +185,8 @@ static volatile bool timer_thd_stop;
 		TIM1->CR1 |= TIM_CR1_UDIS; \
 		TIM8->CR1 |= TIM_CR1_UDIS; \
 		TIM1->CCR1 = duty1; \
-		TIM1->CCR2 = duty3; \
-		TIM1->CCR3 = duty2; \
+		TIM1->CCR2 = duty2; \
+		TIM1->CCR3 = duty3; \
 		TIM8->CCR1 = samp; \
 		TIM1->CR1 &= ~TIM_CR1_UDIS; \
 		TIM8->CR1 &= ~TIM_CR1_UDIS;
@@ -213,6 +214,7 @@ void mcpwm_foc_init(volatile mc_configuration *configuration) {
 	m_phase_override = false;
 	m_phase_now_override = 0.0;
 	m_duty_cycle_set = 0.0;
+	m_duty_set_prev = 0.0;
 	m_id_set = 0.0;
 	m_iq_set = 0.0;
 	m_openloop_speed = 0.0;
@@ -1626,6 +1628,7 @@ void mcpwm_foc_print_state(void) {
 	commands_printf("Mod d:        %.2f", (double)m_motor_state.mod_d);
 	commands_printf("Mod q:        %.2f", (double)m_motor_state.mod_q);
 	commands_printf("Duty:         %.2f", (double)m_motor_state.duty_now);
+	commands_printf("Duty_sp	   %.2f", (double)m_duty_cycle_set);
 	commands_printf("Vd:           %.2f", (double)m_motor_state.vd);
 	commands_printf("Vq:           %.2f", (double)m_motor_state.vq);
 	commands_printf("Phase:        %.2f", (double)m_motor_state.phase);
@@ -1911,39 +1914,48 @@ void mcpwm_foc_adc_int_handler(void *p, uint32_t flags) {
 
 		if (control_duty) {
 			// Duty cycle control
-			static float duty_i_term = 0.0;
-			if (fabsf(duty_set) < (duty_abs - 0.05) ||
-					(SIGN(m_motor_state.vq) * m_motor_state.iq) < m_conf->lo_current_min) {
-				// Truncating the duty cycle here would be dangerous, so run a PID controller.
+			// static float duty_i_term = 0.0;
+			// if (fabsf(duty_set) < (duty_abs - 0.05) ||
+			// 		(SIGN(m_motor_state.vq) * m_motor_state.iq) < m_conf->lo_current_min) {
+			// 	// Truncating the duty cycle here would be dangerous, so run a PID controller.
 
-				// Compensation for supply voltage variations
-				float scale = 1.0 / GET_INPUT_VOLTAGE();
+			// 	// Compensation for supply voltage variations
+			// 	float scale = 1.0 / GET_INPUT_VOLTAGE();
 
-				// Compute error
-				float error = duty_set - m_motor_state.duty_now;
+			// 	// Compute error
+			// 	float error = duty_set - m_motor_state.duty_now;
 
-				// Compute parameters
-				float p_term = error * m_conf->foc_duty_dowmramp_kp * scale;
-				duty_i_term += error * (m_conf->foc_duty_dowmramp_ki * dt) * scale;
+			// 	// Compute parameters
+			// 	float p_term = error * m_conf->foc_duty_dowmramp_kp * scale;
+			// 	duty_i_term += error * (m_conf->foc_duty_dowmramp_ki * dt) * scale;
 
-				// I-term wind-up protection
-				utils_truncate_number(&duty_i_term, -1.0, 1.0);
+			// 	// I-term wind-up protection
+			// 	utils_truncate_number(&duty_i_term, -1.0, 1.0);
 
-				// Calculate output
-				float output = p_term + duty_i_term;
-				utils_truncate_number(&output, -1.0, 1.0);
-				iq_set_tmp = output * m_conf->lo_current_max;
-			} else {
+			// 	// Calculate output
+			// 	float output = p_term + duty_i_term;
+			// 	utils_truncate_number(&output, -1.0, 1.0);
+			// 	iq_set_tmp = output * m_conf->lo_current_max;
+			//} else {
 				// If the duty cycle is less than or equal to the set duty cycle just limit
 				// the modulation and use the maximum allowed current.
-				duty_i_term = 0.0;
+				//duty_i_term = 0.0;
+
+				if (duty_set - m_duty_set_prev >  m_conf->foc_duty_dowmramp_kp * dt) {
+					duty_set = m_duty_set_prev + m_conf->foc_duty_dowmramp_kp * dt;
+				} else if (duty_set - m_duty_set_prev <  -m_conf->foc_duty_dowmramp_kp * dt) {
+					duty_set = m_duty_set_prev - m_conf->foc_duty_dowmramp_kp * dt;
+				}
+
+				m_duty_set_prev = duty_set;	
+
 				m_motor_state.max_duty = duty_set;
 				if (duty_set > 0.0) {
 					iq_set_tmp = m_conf->lo_current_max;
 				} else {
 					iq_set_tmp = -m_conf->lo_current_max;
 				}
-			}
+			//}
 		} else if (m_control_mode == CONTROL_MODE_CURRENT_BRAKE) {
 			// Braking
 			iq_set_tmp = fabsf(iq_set_tmp);
@@ -2053,8 +2065,8 @@ void mcpwm_foc_adc_int_handler(void *p, uint32_t flags) {
 		float Vc = ADC_VOLTS(ADC_IND_SENS3) * ((VIN_R1 + VIN_R2) / VIN_R2);
 #else
 		float Va = ADC_VOLTS(ADC_IND_SENS1) * ((VIN_R1 + VIN_R2) / VIN_R2);
-		float Vb = ADC_VOLTS(ADC_IND_SENS3) * ((VIN_R1 + VIN_R2) / VIN_R2);
-		float Vc = ADC_VOLTS(ADC_IND_SENS2) * ((VIN_R1 + VIN_R2) / VIN_R2);
+		float Vb = ADC_VOLTS(ADC_IND_SENS2) * ((VIN_R1 + VIN_R2) / VIN_R2);
+		float Vc = ADC_VOLTS(ADC_IND_SENS3) * ((VIN_R1 + VIN_R2) / VIN_R2);
 #endif
 
 		// Full Clarke transform (no balanced voltages)

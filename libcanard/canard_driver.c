@@ -206,6 +206,7 @@ static void onTransferReceived(CanardInstance* ins, CanardRxTransfer* transfer) 
 		if (uavcan_equipment_esc_RawCommand_decode_internal(transfer, transfer->payload_len, &cmd, &tmp, 0, true) >= 0) {
 			if (cmd.cmd.len > app_get_configuration()->uavcan_esc_index) {
 				mc_interface_set_duty(((float)cmd.cmd.data[app_get_configuration()->uavcan_esc_index]) / 8192.0);
+				//mc_interface_set_pid_speed(((float)cmd.cmd.data[app_get_configuration()->uavcan_esc_index]) / 8192.0 * 60000.0f);
 				timeout_reset();
 			}
 		}
